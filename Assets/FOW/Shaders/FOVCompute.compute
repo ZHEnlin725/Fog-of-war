@@ -1,0 +1,62 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel Blur
+#pragma kernel Update
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+RWTexture2D<float4> Result;
+
+struct FOV
+{
+    int radius;
+    int x;
+    int y;
+};
+
+int FOVBufferLength;
+StructuredBuffer<FOV> FOVBuffer;
+
+[numthreads(32,32,1)]
+void Blur(uint3 id : SV_DispatchThreadID)
+{
+    int x1 = id.x;
+    int y1 = id.y;
+
+    int x0 = max(0, x1 - 1);
+    int x2 = min(511, x1 + 1);
+
+    int y0 = max(0, y1 - 1);
+    int y2 = max(511, y1 + 1);
+
+    float val = 0;
+
+    val += Result[uint2(x0, y0)].r;
+    val += Result[uint2(x0, y1)].r;
+    val += Result[uint2(x0, y2)].r;
+    val += Result[uint2(x1, y0)].r;
+    val += Result[uint2(x1, y1)].r;
+    val += Result[uint2(x1, y2)].r;
+    val += Result[uint2(x2, y0)].r;
+    val += Result[uint2(x2, y1)].r;
+    val += Result[uint2(x2, y2)].r;
+    float4 color = Result[uint2(x1, y1)];
+    color.r = val / 9;
+    Result[uint2(x1, y1)] = color;
+}
+
+[numthreads(32,32,1)]
+void Update(uint3 id : SV_DispatchThreadID) //从屏幕左下角开始
+{
+    for (int i = 0; i < FOVBufferLength; i ++)
+    {
+        FOV fov = FOVBuffer[i];
+        int dx = id.x - fov.x;
+        int dy = id.y - fov.y;
+        float4 color = Result[id.xy];
+        // if (pow(dx, 2) + pow(dy, 2) < pow(fov.radius, 2))
+        //     color.r = 1;
+        color.r = step(pow(dx, 2) + pow(dy, 2), pow(fov.radius, 2));
+        color.g = max(color.r, color.g);
+        Result[id.xy] = color;
+    }
+}
