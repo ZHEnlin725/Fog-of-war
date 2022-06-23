@@ -117,7 +117,7 @@ namespace FOW.Core
         {
 #if ENABLE_COMPUTE_SHADER
             if (computeShader != null)
-                Destroy(computeShader);
+                DestroyImmediate(computeShader, true);
             computeShader = null;
             fovCache = null;
 #else
