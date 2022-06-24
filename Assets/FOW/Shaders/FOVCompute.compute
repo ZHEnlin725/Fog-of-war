@@ -16,6 +16,9 @@ struct FOV
 int FOVBufferLength;
 StructuredBuffer<FOV> FOVBuffer;
 
+int TexWidth = 512; 
+int TexHeight = 512;
+
 [numthreads(32,32,1)]
 void Blur(uint3 id : SV_DispatchThreadID)
 {
@@ -23,10 +26,10 @@ void Blur(uint3 id : SV_DispatchThreadID)
     int y1 = id.y;
 
     int x0 = max(0, x1 - 1);
-    int x2 = min(511, x1 + 1);
+    int x2 = min(TexWidth - 1, x1 + 1);
 
     int y0 = max(0, y1 - 1);
-    int y2 = max(511, y1 + 1);
+    int y2 = max(TexHeight - 1, y1 + 1);
 
     float val = 0;
 
