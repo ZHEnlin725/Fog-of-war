@@ -46,9 +46,9 @@ namespace FOW.Core
 #if ENABLE_COMPUTE_SHADER
         private struct FOV
         {
-            public int radius;
             public int x;
             public int y;
+            public int radius;
         }
 
         private FOV[] FOVCaches;
