@@ -52,7 +52,7 @@ namespace FOW.Core
             public int y;
         }
 
-        private FOV[] fovCache;
+        private FOV[] FOVCaches;
         [SerializeField] private ComputeShader computeShader;
 #else
         private enum State
@@ -119,7 +119,7 @@ namespace FOW.Core
             if (computeShader != null)
                 DestroyImmediate(computeShader, true);
             computeShader = null;
-            fovCache = null;
+            FOVCaches = null;
 #else
             threadRunning = false;
 
@@ -147,8 +147,8 @@ namespace FOW.Core
         {
 #if ENABLE_COMPUTE_SHADER
             FOVList.Add(fov);
-            if (fovCache == null || FOVList.Count != fovCache.Length)
-                fovCache = new FOV[FOVList.Count];
+            if (FOVCaches == null || FOVList.Count != FOVCaches.Length)
+                FOVCaches = new FOV[FOVList.Count];
 #else
             added.Add(fov);
 #endif
@@ -158,8 +158,8 @@ namespace FOW.Core
         {
 #if ENABLE_COMPUTE_SHADER
             FOVList.Remove(fov);
-            if (fovCache == null || FOVList.Count != fovCache.Length)
-                fovCache = new FOV[FOVList.Count];
+            if (FOVCaches == null || FOVList.Count != FOVCaches.Length)
+                FOVCaches = new FOV[FOVList.Count];
 #else
             removed.Add(fov);
 #endif
@@ -268,25 +268,28 @@ namespace FOW.Core
                 texture = renderTexture;
             }
 
-            if (fovCache == null) return;
+            if (FOVCaches == null) return;
 
             // var dateTime = DateTime.Now;
             var updateKernel = computeShader.FindKernel("Update");
 
-            var length = fovCache.Length;
+            var length = FOVCaches.Length;
+            var scaleX = textureWidth / worldSize.x;
+            var scaleY = textureHeight / worldSize.z;
+            
             for (int i = 0; i < length; i++)
             {
                 var fov = FOVList[i];
-                fovCache[i] = new FOV
+                FOVCaches[i] = new FOV
                 {
-                    x = Mathf.RoundToInt(fov.getPosition().x - worldOrigin.x),
-                    y = Mathf.RoundToInt(fov.getPosition().z - worldOrigin.z),
-                    radius = Mathf.RoundToInt(fov.getRadius() + radiusOffset),
+                    x = Mathf.RoundToInt((fov.getPosition().x - worldOrigin.x) * scaleX),
+                    y = Mathf.RoundToInt((fov.getPosition().z - worldOrigin.z) * scaleY),
+                    radius = Mathf.RoundToInt((fov.getRadius() + radiusOffset) * Mathf.Max(scaleX,scaleY)),
                 };
             }
 
             var FOVBuffer = new ComputeBuffer(length, sizeof(int) * 3);
-            FOVBuffer.SetData(fovCache);
+            FOVBuffer.SetData(FOVCaches);
 
             computeShader.SetInt("FOVBufferLength", length);
             computeShader.SetBuffer(updateKernel, "FOVBuffer", FOVBuffer);
@@ -378,12 +381,12 @@ namespace FOW.Core
         {
             var radius = fov.getRadius() + radiusOffset;
             var position = fov.getPosition() - worldOrigin;
-
-            var worldToTexX = worldSize.x * 1f / textureWidth;
-            var worldToTexY = worldSize.z * 1f / textureHeight;
-
-            var texRadius = new Vector2(radius * worldToTexX, radius * worldToTexY);
-            var texPosition = new Vector2(position.x * worldToTexX, position.z * worldToTexY);
+            
+            var scaleX = textureWidth / worldSize.x;
+            var scaleY = textureHeight / worldSize.z;
+            
+            var texRadius = new Vector2(radius * scaleX, radius * scaleY);
+            var texPosition = new Vector2(position.x * scaleX, position.z * scaleY);
 
             var max = new Vector2(texPosition.x + texRadius.x, texPosition.y + texRadius.y);
             var min = new Vector2(texPosition.x - texRadius.x, texPosition.y - texRadius.y);
