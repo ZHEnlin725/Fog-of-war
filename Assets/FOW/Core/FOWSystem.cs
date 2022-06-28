@@ -75,7 +75,7 @@ namespace FOW.Core
 
         private readonly List<IFOV> FOVList = new List<IFOV>();
 
-        public void Init(Vector2 worldSize, Vector2 worldOrigin, int textureWidth = 512, int textureHeight = 512)
+        public void Init(Vector3 worldSize, Vector3 worldOrigin, int textureWidth = 512, int textureHeight = 512)
         {
             this.worldSize = worldSize;
             this.worldOrigin = worldOrigin;
