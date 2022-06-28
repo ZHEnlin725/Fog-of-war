@@ -23,8 +23,4 @@ public abstract class MonoSingletonTemplate<T> : MonoBehaviour where T : MonoSin
             return inst;
         }
     }
-
-    public virtual void Init()
-    {
-    }
 }

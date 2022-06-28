@@ -11,8 +11,4 @@
             return inst;
         }
     }
-
-    public virtual void Init()
-    {
-    }
 }

@@ -9,8 +9,7 @@ public class Launch : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        FOWSystem.sharedInst.setWorld(new Vector3(512, 0, 512), new Vector3(-256, 0, -256));
-        FOWSystem.sharedInst.Init();
+        FOWSystem.sharedInst.Init(new Vector3(512, 0, 512), new Vector3(-256, 0, -256));
         mapFOWRender = new MapFOWRender();
         var o = new GameObject("FOV-Circle");
         var fov = o.AddComponent<TestFOV>();

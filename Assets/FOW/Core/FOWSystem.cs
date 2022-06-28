@@ -21,11 +21,10 @@ namespace FOW.Core
 
         public int textureWidth = 512, textureHeight = 512;
 
-        public float textureBlendTime = 0.5f;
-
 #if !ENABLE_COMPUTE_SHADER
         [Range(0f, 1f)] public float bufferUpdateInterval = 0.1f;
         public float blendFactor;
+        public float textureBlendTime = 0.5f;
 #endif
 
         [Range(1, 10)] public uint blurIterations = 1;
@@ -76,8 +75,13 @@ namespace FOW.Core
 
         private readonly List<IFOV> FOVList = new List<IFOV>();
 
-        public override void Init()
+        public void Init(Vector2 worldSize, Vector2 worldOrigin, int textureWidth = 512, int textureHeight = 512)
         {
+            this.worldSize = worldSize;
+            this.worldOrigin = worldOrigin;
+            this.textureWidth = textureWidth;
+            this.textureHeight = textureHeight;
+            
 #if ENABLE_COMPUTE_SHADER
 
 #if UNITY_EDITOR
@@ -205,7 +209,9 @@ namespace FOW.Core
 
         private void UpdateTexture()
         {
-            if (texture == null)
+            if (texture == null ||
+                texture.width != textureWidth ||
+                texture.height != textureHeight)
             {
                 texture = CreateTexture();
 #if !ENABLE_COMPUTE_SHADER

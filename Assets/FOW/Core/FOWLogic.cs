@@ -9,10 +9,6 @@ namespace FOW.Core
 
         private List<FOWRender> FOWRenders = new List<FOWRender>();
 
-        public override void Init()
-        {
-        }
-
         public FOWRender CreateFOWRender()
         {
             FOWRender render = null;
