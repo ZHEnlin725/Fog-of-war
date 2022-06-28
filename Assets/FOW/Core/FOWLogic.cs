@@ -32,6 +32,14 @@ namespace FOW.Core
             return render;
         }
 
+        public void InitFOWSystem(Vector3 worldSize, Vector3 worldOrigin, int textureWidth = 512,
+            int textureHeight = 512)
+        {
+            FOWSystem.sharedInst.setWorld(worldSize, worldOrigin);
+            FOWSystem.sharedInst.setTexture(textureWidth, textureHeight);
+            FOWSystem.sharedInst.Init();
+        }
+
         public void AddRender(FOWRender render)
         {
             FOWRenders.Add(render);
