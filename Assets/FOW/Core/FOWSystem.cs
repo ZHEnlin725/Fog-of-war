@@ -81,7 +81,8 @@ namespace FOW.Core
 #if ENABLE_COMPUTE_SHADER
 
 #if UNITY_EDITOR
-            computeShader = AssetDatabase.LoadAssetAtPath<ComputeShader>("Assets/FOW/Shaders/FOVCompute.compute");
+            var shader = AssetDatabase.LoadAssetAtPath<ComputeShader>("Assets/FOW/Shaders/FOVCompute.compute");
+            computeShader = Instantiate(shader);
 #else
             //todo 根据实际情况加载computeShader资源
 #endif
@@ -117,7 +118,7 @@ namespace FOW.Core
         {
 #if ENABLE_COMPUTE_SHADER
             if (computeShader != null)
-                DestroyImmediate(computeShader, true);
+                Destroy(computeShader);
             computeShader = null;
             FOVCaches = null;
 #else
@@ -276,7 +277,7 @@ namespace FOW.Core
             var length = FOVCaches.Length;
             var scaleX = textureWidth / worldSize.x;
             var scaleY = textureHeight / worldSize.z;
-            
+
             for (int i = 0; i < length; i++)
             {
                 var fov = FOVList[i];
@@ -284,7 +285,7 @@ namespace FOW.Core
                 {
                     x = Mathf.RoundToInt((fov.getPosition().x - worldOrigin.x) * scaleX),
                     y = Mathf.RoundToInt((fov.getPosition().z - worldOrigin.z) * scaleY),
-                    radius = Mathf.RoundToInt((fov.getRadius() + radiusOffset) * Mathf.Max(scaleX,scaleY)),
+                    radius = Mathf.RoundToInt((fov.getRadius() + radiusOffset) * Mathf.Max(scaleX, scaleY)),
                 };
             }
 
@@ -292,6 +293,8 @@ namespace FOW.Core
             FOVBuffer.SetData(FOVCaches);
 
             computeShader.SetInt("FOVBufferLength", length);
+            computeShader.SetInt("TexWidth", textureWidth);
+            computeShader.SetInt("TexHeight", textureHeight);
             computeShader.SetBuffer(updateKernel, "FOVBuffer", FOVBuffer);
             computeShader.SetTexture(updateKernel, "Result", texture);
 
