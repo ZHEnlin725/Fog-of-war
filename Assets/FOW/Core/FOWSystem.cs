@@ -1,5 +1,6 @@
 ﻿#define ENABLE_COMPUTE_SHADER
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
@@ -12,7 +13,7 @@ namespace FOW.Core
     /// <summary>
     /// Fog of war texture
     /// </summary>
-    public class FOWSystem : MonoSingletonTemplate<FOWSystem>
+    public class FOWSystem : MonoSingletonTemplate<FOWSystem>, IDisposable
     {
         public Vector3 worldSize;
         public Vector3 worldOrigin;
@@ -52,6 +53,8 @@ namespace FOW.Core
         }
 
         private FOV[] FOVCaches;
+
+        private ComputeBuffer FOVBuffer;
         [SerializeField] private ComputeShader computeShader;
 #else
         private enum State
@@ -120,6 +123,8 @@ namespace FOW.Core
                 Destroy(computeShader);
             computeShader = null;
             FOVCaches = null;
+            if (FOVBuffer != null) 
+                FOVBuffer.Release();
 #else
             threadRunning = false;
 
@@ -147,8 +152,7 @@ namespace FOW.Core
         {
 #if ENABLE_COMPUTE_SHADER
             FOVList.Add(fov);
-            if (FOVCaches == null || FOVList.Count != FOVCaches.Length)
-                FOVCaches = new FOV[FOVList.Count];
+            UpdateCachesAndComputeBuffer();
 #else
             added.Add(fov);
 #endif
@@ -158,8 +162,7 @@ namespace FOW.Core
         {
 #if ENABLE_COMPUTE_SHADER
             FOVList.Remove(fov);
-            if (FOVCaches == null || FOVList.Count != FOVCaches.Length)
-                FOVCaches = new FOV[FOVList.Count];
+            UpdateCachesAndComputeBuffer();
 #else
             removed.Add(fov);
 #endif
@@ -253,6 +256,15 @@ namespace FOW.Core
         #region UpdateBuffer Or Compute
 
 #if ENABLE_COMPUTE_SHADER
+        private void UpdateCachesAndComputeBuffer()
+        {
+            if (FOVCaches == null || FOVList.Count != FOVCaches.Length)
+            {
+                FOVCaches = new FOV[FOVList.Count];
+                FOVBuffer = new ComputeBuffer(FOVCaches.Length, sizeof(int) * 3);
+            }
+        }
+
         private void Compute()
         {
             if (texture == null)
@@ -273,7 +285,6 @@ namespace FOW.Core
             if (FOVCaches == null) return;
 
             // var dateTime = DateTime.Now;
-            var updateKernel = computeShader.FindKernel("Update");
 
             var length = FOVCaches.Length;
             var scaleX = textureWidth / worldSize.x;
@@ -290,12 +301,13 @@ namespace FOW.Core
                 };
             }
 
-            var FOVBuffer = new ComputeBuffer(length, sizeof(int) * 3);
             FOVBuffer.SetData(FOVCaches);
 
             computeShader.SetInt("FOVBufferLength", length);
             computeShader.SetInt("TexWidth", textureWidth);
             computeShader.SetInt("TexHeight", textureHeight);
+
+            var updateKernel = computeShader.FindKernel("Update");
             computeShader.SetBuffer(updateKernel, "FOVBuffer", FOVBuffer);
             computeShader.SetTexture(updateKernel, "Result", texture);
 
@@ -306,7 +318,6 @@ namespace FOW.Core
             for (int i = 0; i < blurIterations; i++)
                 computeShader.Dispatch(blurKernel, textureWidth / 32, textureHeight / 32, 1);
 
-            FOVBuffer.Release();
             // Debug.Log($"Compute Consume {(DateTime.Now - dateTime).Milliseconds}ms");
         }
 
