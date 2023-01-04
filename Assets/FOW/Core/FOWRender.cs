@@ -8,8 +8,8 @@ namespace FOW.Core
     /// </summary>
     public class FOWRender : MonoBehaviour
     {
-        public Color exploredColor = new Color(0f, 0f, 0f, 200f / 255f);
-        public Color unexploredColor = new Color(0f, 0f, 0f, 250f / 255f);
+        public Color exploredColor = new Color(0f, 0f, 0f, 10f / 255f);
+        public Color unexploredColor = new Color(0f, 0f, 0f, 200f / 255f);
 
         [SerializeField] private Material material;
 

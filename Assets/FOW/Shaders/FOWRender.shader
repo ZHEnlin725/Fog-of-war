@@ -44,9 +44,12 @@
 
         half4 frag(v2f i) : SV_Target
         {
-            half4 buffer = tex2D(_MainTex, i.uv);
-            half4 color = lerp(_Unexplored, _Explored, buffer.g);
-            color.a = (1 - buffer.r) * color.a;
+            half4 buffer = tex2D(_MainTex, i.uv); 
+            // half4 color = lerp(_Unexplored, _Explored, buffer.g);
+            // color.a = (1 - buffer.r) * color.a;
+
+            // 颜色融合自然一点
+            half4 color = _Unexplored * (1 - buffer.g) + _Explored * buffer.g;
             return color;
         }
         ENDCG

@@ -83,7 +83,7 @@ namespace FOW.Core
 #if ENABLE_COMPUTE_SHADER
 
 #if UNITY_EDITOR
-            var shader = AssetDatabase.LoadAssetAtPath<ComputeShader>("Assets/FOW/Shaders/FOVCompute.compute");
+            var shader = AssetDatabase.LoadAssetAtPath<ComputeShader>("Assets/FOW/Shaders/FOWCompute.compute");
             computeShader = Instantiate(shader);
 #else
             //todo 根据实际情况加载computeShader资源
@@ -415,8 +415,13 @@ namespace FOW.Core
                     if (x < 0 || x >= textureWidth) continue;
                     var dx = x - texPosition.x;
                     var dy = y - texPosition.y;
-                    if (dx * dx + dy * dy < texRadius.x * texRadius.y)
+                    var distSqr = dx * dx + dy * dy;
+                    var radiusSqr = texRadius.x * texRadius.y;
+                    if (distSqr <= radiusSqr)
+                    {
                         tempBuffer[x + yx].r = 255;
+                        tempBuffer[x + yx].b = (byte) ((1 - distSqr / radiusSqr) * 255);
+                    }
                 }
             }
         }
@@ -457,10 +462,9 @@ namespace FOW.Core
         {
             for (int i = 0; i < tempBuffer.Length; i++)
             {
-                // green通道表示探索过的区域
-                if (tempBuffer[i].g < tempBuffer[i].r)
-                    tempBuffer[i].g = tempBuffer[i].r;
-
+                // if (tempBuffer[i].g < tempBuffer[i].r)
+            //     tempBuffer[i].g = tempBuffer[i].r;
+            tempBuffer[i].g = Math.Max(tempBuffer[i].g, tempBuffer[i].b);
                 // red通道表示当前所在的区域
                 renderBuffer[i].r = tempBuffer[i].r;
             }

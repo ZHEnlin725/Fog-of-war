@@ -56,10 +56,16 @@ void Update(uint3 id : SV_DispatchThreadID) //从屏幕左下角开始
         int dx = id.x - fov.x;
         int dy = id.y - fov.y;
         half4 color = Result[id.xy];
-        // if (pow(dx, 2) + pow(dy, 2) < pow(fov.radius, 2))
-        //     color.r = 1;
-        color.r = step(pow(dx, 2) + pow(dy, 2), pow(fov.radius, 2));
-        color.g = max(color.r, color.g);
+        float distSqr = pow(dx, 2) + pow(dy, 2);
+        float radiusSqr = pow(fov.radius, 2);
+        int step_val = step(distSqr, radiusSqr);
+        color.r = step_val;
+        // color.g = max(color.r, color.g);
+
+        // todo blue用于颜色融合效果比较自然
+        color.b = lerp(0, 1 - (distSqr / radiusSqr), step_val);
+        color.g = max(color.b, color.g);
+
         Result[id.xy] = color;
     }
 }
